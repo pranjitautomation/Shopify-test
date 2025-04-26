@@ -1,0 +1,83 @@
+{% assign DEBUG = true %} 
+{% assign decimal = false %} 
+{% assign step = 1 %}
+{% assign minimum_qty = 1 %}
+
+{% assign disp_price_min = product.price_min %}
+{% assign disp_price_compare = product.compare_at_price %}
+{% assign disp_price = product.price %}
+
+{% if settings.pr_enable_decimal %}
+
+	{% assign pri_unit = settings.pr_unit %}
+
+  	{% if settings.pr_common_decimal %}
+		
+		{% if product.tags contains 'decimal' %}
+
+			{% assign decimal = true %}  
+		  	{% assign step = settings.pr_decimal_step_size %}
+          	{% assign minimum_qty = settings.pr_minimum_qty %}
+		{% endif%}
+
+  	{% elsif product.metafields.propero['decimal_step_size'] != blank %}  
+		
+		{% assign step = product.metafields.propero['decimal_step_size'] %}
+		{% assign decimal = true %}
+
+  	{% endif %}
+
+	{% assign checkout_text = settings.pr_checkout_text |replace :"%UNIT%", pri_unit %}
+	{% assign qty_multiple = 1 | divided_by : step %}
+	{% assign checkout_text = checkout_text | replace :"%QUANTITY%", qty_multiple   %}	
+
+{% endif %}
+
+{% unless settings.pr_common_decimal %}
+
+    {% if product.metafields.propero['minimum_qty'] != blank %}
+        {% assign minimum_qty = product.metafields.propero['minimum_qty'] %}	
+    {% endif %}
+
+{% endunless %}
+
+{% if template.name == 'product' or template.name == 'collection'%}
+
+{% assign disp_price = product.price | divided_by : step %}
+{% assign disp_price_min = product.price_min | divided_by : step %}
+{% assign disp_price_compare = product.compare_at_price | divided_by : step %}
+
+{% endif %}
+
+{% if template.name == 'cart'%}
+{% if decimal %}
+
+    {% assign disp_quan = item.quantity | times : step %}
+    {% assign disp_price_original = item.original_price | times : item.quantity  %}
+    {% assign disp_price_final = item.final_price | divided_by: step %}
+
+	<script>
+
+    var step = 1;
+    var min_qty =1;
+    var commonSet = {{settings.pr_common_decimal}};
+  
+    if(commonSet){
+      step = parseFloat({{ settings.pr_decimal_step_size }});
+      //alert(step);
+      min_qty= parseFloat({{ settings.pr_minimum_qty }});
+    }else
+    {   
+      step = parseFloat("{{ item.product.metafields.propero['decimal_step_size']}}");
+      min_qty= parseFloat({{ item.product.metafields.propero['minimum_qty']}});
+      //alert(step);
+    }
+  
+</script>
+
+{% else %}
+    {% assign disp_quan = item.quantity %}
+    {% assign disp_price_original = item.original_price | times : item.quantity %} 
+    {% assign disp_price_final = item.final_price %} 
+{% endif %}
+{% endif %}

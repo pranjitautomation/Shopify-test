@@ -1,0 +1,73 @@
+{% schema %}
+  {
+	"name": "Section name",
+	"settings": [
+
+		{
+			"type": "select",
+			"id": "layout",
+            "label": "Select layout",
+			"options": [{
+					"value": "image_first",
+					"label": "t:sections.image-with-text.settings.layout.options__1.label"
+				},
+				{
+					"value": "text_first",
+					"label": "t:sections.image-with-text.settings.layout.options__2.label"
+				}
+			]
+		}
+	],
+	"blocks": [{
+		"type": "image",
+		"name": "image",
+		"settings": [{
+				"type": "image_picker",
+				"id": "first-image",
+				"label": "First Image"
+			},
+			{
+				"type": "image_picker",
+				"id": "second-image",
+				"label": "Second Image"
+			}
+		]
+	}],
+
+	"blocks": [{
+		"type": "text",
+		"name": "text",
+		"settings": [{
+				"type": "text",
+				"id": "heading",
+				"label": "HEADING"
+			},
+			{
+				"type": "text",
+				"id": "para",
+				"label": "PARAGRAPH"
+			},
+			{
+				"type": "text",
+				"id": "button",
+				"label": "Button"
+			},
+			{
+				"type": "url",
+				"id": "btn-url",
+				"label": "Button-url"
+			}
+		]
+	}],
+
+	"presets": [{
+		"name": "swap-image"
+	}]
+}
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}

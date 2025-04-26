@@ -1,0 +1,171 @@
+<style>
+  .slider-content {
+    margin-bottom: 2rem;
+  }
+  
+  .slider-content h1, .slider-content h2, .slider-content h3, .slider-content h4 {
+    margin: 0;
+  }
+  
+  .slider-content p {
+    margin-top: 5px;
+  }
+  
+  .marq-container {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    gap: 10px;
+    cursor: pointer;
+  }
+  
+  .img-container {
+    flex: 0 0 auto;
+    width: calc(25% - 10px);
+    transition: transform 0.3s ease;
+  }
+  
+  .img-container img {
+    width: 100%;
+    height: auto;
+  }
+
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .img-container {
+      width: calc(75% - 10px);
+    }
+  }
+
+</style>
+<section id="{{ section.id }}">
+  <div class="slider-container section-{{ section.id }}-padding">
+    {% if product.metafields.custom.sliding_images != blank %}
+    <div class="page-width slider-content">{{ section.settings.text }}</div>
+    <div class="marq-container">
+      {% for img in product.metafields.custom.sliding_images.value %}
+        <div class="img-container">
+          <img src="{{ img | img_url: 'master' }}" height="auto" width="auto">
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const container = document.querySelector('.marq-container');
+    const items = document.querySelectorAll('.img-container');
+    const totalItems = items.length;
+    let animation;
+  
+    // Check condition to slide or not
+    function shouldSlide() {
+      if (window.innerWidth > 768) {
+        return totalItems > 3; // Slide if more than 3 images on desktop
+      } else {
+        return totalItems > 1; // Slide if more than 1 image on mobile
+      }
+    }
+  
+    // Start marquee effect
+    var speedConstant = 100 - {{ section.settings.speed }};
+    function startMarquee() {
+      if (shouldSlide()) {
+        let scrollAmount = 0;
+        animation = setInterval(function () {
+          scrollAmount += 1;
+          container.scrollLeft = scrollAmount;
+          if (scrollAmount >= container.scrollWidth / 2) {
+            scrollAmount = 0;
+          }
+        }, speedConstant);
+      }
+    }
+  
+    // Stop marquee effect
+    function stopMarquee() {
+      clearInterval(animation);
+    }
+  
+    // Clone items to create an infinite effect
+    if (shouldSlide()) {
+      container.innerHTML += container.innerHTML;
+    }
+  
+    // Start animation initially if conditions meet
+    startMarquee();
+  
+    // Pause on hover
+    container.addEventListener('mouseenter', stopMarquee);
+    container.addEventListener('mouseleave', startMarquee);
+  
+    // Recheck on window resize
+    window.addEventListener('resize', () => {
+      stopMarquee();
+      if (shouldSlide()) {
+        container.innerHTML = container.innerHTML.slice(0, container.innerHTML.length / 2); // Reset if resized
+        container.innerHTML += container.innerHTML; // Clone items again
+        startMarquee();
+      }
+    });
+  });
+</script>
+{% schema %}
+  {
+    "name": "Slider",
+    "settings": [
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Text"
+      },
+      {
+        "type": "range",
+        "id": "speed",
+        "label": "Speed",
+        "min": 10,
+        "max": 90,
+        "step": 10,
+        "default": 20
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 36
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 36
+      }
+    ],
+    "presets": [
+      {
+        "name": "Slider"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,485 @@
+<div class="map-container  ">
+  <div class="search-bar">
+    <div class="bar_width">
+      {% if section.settings.title != blank %}
+      <h1>{{ section.settings.title }}</h1>
+      {% endif %}
+      {% if section.settings.description != blank %}
+      <p>       
+        {{ section.settings.description }}
+      </p>
+        {% endif %}
+      <div id="input-wrapper">
+        <input id="searchInput" class="controls" type="text" placeholder="Search by location">
+        <div id="search-icon"><i class="fa fa-search"></i></div>
+        <div id="location-icon"><i class="material-icons"></i></div>
+      </div>
+      <div id="near-dealers"></div>
+      
+    </div>
+  </div>
+  <div id="map" class="googlelmappp"></div>
+</div>
+
+{% schema %}
+  {
+    "name": "Google Map",
+    "settings": [
+      {
+        "type": "text",
+        "id": "description",
+        "label": "Description"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title"
+      },
+      {
+        "type": "checkbox",
+        "id": "meta_enable",
+        "label": "Use metaobject",
+        "default": true,
+        "info": "Note: If you use this, Block won't work"
+      }
+    ],
+     "blocks": [
+      {
+        "type": "location",
+        "name": "Add Location",
+        "settings": [
+          {
+            "type": "text",
+            "id": "lat",
+            "label": "Latitude",
+            "default": "37.0902"
+          },
+          {
+            "type": "text",
+            "id": "long",
+            "label": "Longitude",
+            "default": "-95.7129"
+          },
+          {
+            "type": "text",
+            "id": "address",
+            "label": "Address",
+            "default": "address"
+          },
+          {
+            "type": "richtext",
+            "id": "detail",
+            "label": "Description"
+          } 
+     ]
+      }
+     ],
+     "presets": [
+      {
+        "name": "Google Map"
+      }
+    ]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}
+<style>
+
+.map-container {
+  display: flex;
+  flex-direction: row;
+  margin: 50px 0;
+}
+.bar_width h1 {
+  font-family: "Tram Cn";
+  font-size: 44px;
+  font-weight: 265;
+}
+.bar_width p {
+  color: #121212;
+  font-family: "Avenir Next";
+  font-size: 15px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+.search-bar {
+  width: 30%;
+  padding: 0px;
+  background-color: #fff;
+}
+.bar_width {
+  margin:0px 20px;
+}
+#input-wrapper {
+  position: relative;
+}
+#searchInput {
+  width: 100%;
+  padding: 14px 8px;
+  border: 2px solid #000;
+  background-color: #fafafa;
+  color: #000;
+  font-family: Avenir Next;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0em;
+}
+#location-icon {
+  position: absolute;
+  top: 58%;
+  transform: translateY(-50%);
+  color: #888;
+  cursor: pointer;
+  left: 10px;
+}
+#search-icon {
+  right: 15px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  cursor: pointer;
+  font-size: 25px;
+}
+
+#map {
+  width: 70%;
+  height: 90vh;
+}
+  div#near-dealers {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    margin-left: 0px;
+}
+  .near-locations {
+    display: flex;
+    /* justify-content: space-between; */
+    flex-direction: column;
+    justify-content: center;
+    align-items: end;
+    border: 1px solid;
+    cursor: pointer;
+    padding: 6px;
+    text-align: left;
+}
+@media screen and (max-width: 768px) {
+  .map-container {
+    flex-direction: column;
+  }
+  .search-bar {
+    width: 100%;
+  }
+  #map {
+    width: 100%;
+  }
+  #searchInput {
+    padding: 10px 40px;
+  }
+  #map {
+    width: 100%;
+    height: 52vh;
+}
+}
+  .main-page-title.page-title.h0{
+  text-align: center;
+  margin-bottom: 0;
+  }
+
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js" ></script>
+ <script
+      src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyDKY_JhA3GS1Scm13i8NKx3YCHcgbWhlfo&callback=initMap"
+      async
+      defer
+    ></script>
+     <script>
+       var markers  = [];
+       var map_markers = [];
+      var geocoder;
+      window.map;
+      var searchLat;
+      var searchLng;
+      var searchAddress;
+       {% if section.settings.meta_enable %}
+         {%- for location_ref in product.metafields.custom.locations.value -%}
+          {%- assign location = location_ref -%}
+           markers.push( { lat:{{ location.lattitudes }} , long:{{ location.longitudes }} {% if location.address != blank %},  address: '{{ location.address_title }}'{% endif %} });
+        {%- endfor -%}
+       {% else %}
+        {% for block in section.blocks %}
+          markers.push( { lat:{{ block.settings.lat }} , long:{{ block.settings.long }} ,  address: '{{ block.settings.address }}', title: '{{ block.settings.detail }}' });
+        {% endfor %}
+       {% endif %}
+      var directionsService ;
+      var directionsRenderer ;
+      
+      function initMap() {
+        geocoder = new google.maps.Geocoder();
+           map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 35.898221793803266, lng: -78.89802225547537},
+            zoom: 6
+          });
+        
+          var input = document.getElementById('searchInput');
+
+          var autocomplete = new google.maps.places.Autocomplete(input);
+          autocomplete.bindTo('bounds', map);
+          directionsService = new google.maps.DirectionsService();
+           directionsRenderer = new google.maps.DirectionsRenderer();
+        
+         var infoWindows = [];
+         
+for (var i = 0; i < markers.length; i++) {
+  console.log(markers[i]);
+  var marker = new google.maps.Marker({
+   position: { lat: markers[i].lat, lng: markers[i].long },
+    map: map,
+    title: markers[i].title,
+    icon: "https://cdn.shopify.com/s/files/1/0510/1712/1965/files/placeholder_50x.png?v=1681895897",
+  });
+  map_markers.push(marker);
+
+        var contentString =
+            '<div id="info-window">' +
+            '<h3>' + markers[i].title + '</h3>' +
+            '</div>';
+
+          // Create info window
+            var infowindow = new google.maps.InfoWindow()
+
+google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){ 
+        return function() {
+           infowindow.setContent(contentString);
+           infowindow.open(map,marker);
+        };
+    })(marker,contentString,infowindow));
+
+        
+  
+}
+        // Close all info windows
+      
+
+      
+
+        
+autocomplete.addListener('place_changed', function(event) {
+              container = document.getElementById("near-dealers");
+               $("#near-dealers").empty();
+              infowindow.close();
+              marker.setVisible(false);
+              var place = autocomplete.getPlace();
+              if (!place.geometry) {
+                  window.alert("Autocomplete's returned place contains no geometry");
+                  return;
+              }
+                const location = place.geometry.location;
+                searchLat = location.lat();
+                searchLng = location.lng();
+                searchAddress = place.formatted_address;
+                var near_locations = "";
+                const locations = [];
+                const sorted_locations = [];
+                 for (var i = 0; i < markers.length; i++) {
+                  var distance = getDistanceFromLatLonInKm(location.lat(), location.lng(), markers[i].lat, markers[i].long);
+                  if(distance < 250)
+                  {
+                      sorted_locations.push(
+                        {
+                          "lat" : markers[i].lat,
+                          "long" : markers[i].long,
+                          "address" : markers[i].address,
+                          "title" : markers[i].title,
+                          "distance" : distance.toFixed(2)
+                        }
+                      );
+                  }
+                  
+                }
+
+       sorted_locations.sort((a, b) => a.distance - b.distance);
+ 
+            console.log(sorted_locations);
+                for (var i = 0; i < sorted_locations.length; i++) {
+                  
+                    near_locations += "<div class='near-locations' data-lat="+sorted_locations[i].lat+"  data-long="+sorted_locations[i].long+"><span>"+sorted_locations[i].title+"</span>\
+                        <span class='distance'>"+sorted_locations[i].distance+" Miles</span></div>";
+                    locations.push({lat: sorted_locations[i].lat, lng:sorted_locations[i].long,title: sorted_locations[i].title});
+                }
+  
+                if(near_locations == "")
+                {
+                  //near_locations = "<div class='near-locations'><span>Can not find any delears near your location.</span></div>";
+                  near_locations = "<div class='near-locations'><span> Wir können keinen Händler in der Nähe Ihres Standorts finden</span></div>";
+                }else{
+                  
+                }
+                
+                container.insertAdjacentHTML(
+                    "beforeend",
+                    near_locations
+                  );
+  
+              if (place.geometry.viewport) {
+                  map.fitBounds(place.geometry.viewport);
+                 
+              } else {
+                  map.setCenter(place.geometry.location);
+                 
+              }
+   map.setZoom(8);
+              console.log(locations);
+            addMarkers(locations);
+ 
+          });
+      }
+
+function removeMarkers() {
+  for (var i = 0; i < map_markers.length; i++) {
+    map_markers[i].setMap(null);
+  }
+}
+
+function addMarkers(locations) {
+  var markers = [];
+  for (var i = 0; i < locations.length; i++) {
+   var marker = new google.maps.Marker({
+   position: { lat: locations[i].lat, lng: locations[i].lng },
+    map: map,
+    title: "addresss",
+    icon: "https://cdn.shopify.com/s/files/1/0510/1712/1965/files/placeholder_50x.png?v=1681895897",
+  });
+  map_markers.push(marker);
+    
+        var contentString =
+            '<div id="info-window">' +
+            '<h3>' + locations[i].title + '</h3>' +
+            '</div>';
+
+          // Create info window
+            var infowindow = new google.maps.InfoWindow()
+
+google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){ 
+        return function() {
+           infowindow.setContent(contentString);
+           infowindow.open(map,marker);
+        };
+    })(marker,contentString,infowindow));
+  }
+}
+   
+ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1); // deg2rad below
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) *
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c * 0.621371; // Distance in miles
+  
+  return distance;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180);
+}
+
+      $(function(){
+            
+      $('#near-dealers').on('click', ".near-locations", function() {
+        debugger
+          var lat = $(this).data("lat");
+           var long = $(this).data("long");
+        removeMarkers();
+          map.setCenter({ lat: lat, lng: long });
+       
+         var marker = new google.maps.Marker({
+            position: { lat: lat, lng: long },
+            map: map,
+            title: 'HYTECON',
+            icon: "https://cdn.shopify.com/s/files/1/0510/1712/1965/files/placeholder_50x.png?v=1681895897",
+          });
+        
+        const filteredPeople = markers.filter(item => item.lat == lat && item.long == long );
+        
+        var infowindow = new google.maps.InfoWindow({
+              content: filteredPeople[0].title
+            });
+            
+            infowindow.open(map, marker);
+            marker.addListener('click', function() {
+             infowindow.open(map, marker);
+           });
+      map_markers.push(marker);
+
+
+var markerA = new google.maps.Marker({
+  position: {lat: searchLat, lng: searchLng},
+  map: map,
+  icon: "https://cdn.shopify.com/s/files/1/0510/1712/1965/files/placeholder_50x.png?v=1681895897",
+});
+
+// Create an infowindow for location A.
+var infowindowA = new google.maps.InfoWindow({
+  content: searchAddress
+});
+
+markerA.addListener('click', function() {
+  infowindowA.open(map, markerA);
+});
+        
+         
+        var request = {
+          origin: { lat: searchLat, lng: searchLng }, 
+          destination: { lat: lat, lng: long }, 
+          travelMode: 'DRIVING'
+        };
+        requestRoute(request);
+        
+        
+        });
+      });
+
+      
+directionsRenderer.setMap(map);
+
+// Define a function to handle route requests
+function requestRoute(requestLoca) {
+  // Define a DirectionsRequest object for the new route
+  const request = requestLoca;
+
+  // Make a request to the DirectionsService to get the new route
+  const directionsService = new google.maps.DirectionsService();
+  directionsService.route(request, (response, status) => {
+    if (status === "OK") {
+      // Remove the previous route line from the map
+      directionsRenderer.setMap(null);
+
+      // Store the new route in the DirectionsRenderer object
+      directionsRenderer.setDirections(response);
+directionsRenderer.setOptions({suppressMarkers: true});
+      // Add the DirectionsRenderer object back to the map
+      directionsRenderer.setMap(map);
+    } else {
+      console.error(`Directions request failed: ${status}`);
+    }
+  });
+}
+    </script>
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">

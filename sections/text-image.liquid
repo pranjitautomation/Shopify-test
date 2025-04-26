@@ -1,0 +1,57 @@
+<style>
+  {% for block in section.blocks %}
+   #{{ section.id }} .page-width .text-container .text{
+    font-size: {{ block.settings.font_size }}px;
+  }
+  {% endfor %}
+</style>
+<section id="{{ section.id }}">
+  <div class="page-width">
+    <h1>{{ section.settings.heading }}</h1>
+    <div class="text-container">
+      {% for block in section.blocks %}
+        <p class="text">{{ block.settings.text }}</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% schema %}
+  {
+    "name": "Text with image",
+    "settings": [
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "Write your label"
+      }
+    ],
+    "blocks":[
+      {
+        "type": "text",
+        "name": "text",
+        "settings": [
+          {
+            "type": "text",
+            "id": "text",
+            "label": "Add text"
+          },
+          {
+            "type": "range",
+            "id": "font_size",
+            "label": "Set font size",
+            "min": 1,
+            "max": 100,
+            "step": 3,
+            "unit": "px",
+            "default": 10
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Text with image"
+      }
+    ]
+  }
+{% endschema %}

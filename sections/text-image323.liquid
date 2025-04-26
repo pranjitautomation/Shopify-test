@@ -1,0 +1,67 @@
+<div id="{{ section.id }}" class="page-width">
+  <div id="text-img-controller">
+     {% for block in section.blocks %}
+       {%- case block.type -%}
+          {%- when "image" -%}
+            <img class="image-part" src="{{ block.settings.image-picker | img_url:'master' }}" width="auto" height="auto">
+         {%- when "text" -%}
+            <div class="text-part">{{ block.settings.text-add }}</div>
+        {% endcase %}
+     {% endfor %}
+  </div>
+</div>
+
+
+{% schema %}
+  {
+    "name": "Text Image Controller",
+    "settings": [
+        {
+          "type": "select",
+          "id": "happy_segment",
+          "label": "Are you Happy with this section:",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "label": "no",
+              "value": "No"
+            }
+          ]
+          
+          
+        }
+    ],
+    "blocks": [
+      {
+        "name": "Image",
+        "type": "image",
+        "settings": [
+          {
+            "id":"image-picker",
+            "type": "image_picker",
+            "label": "Choose Image"
+          }
+        ]
+      },
+      {
+        "name": "Text+",
+        "type": "text",
+        "settings": [
+          {
+            "type": "richtext",
+            "label": "Write Your Text",
+            "id": "text-add"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Text Image Controller"
+      }
+    ]
+  }
+{% endschema %}

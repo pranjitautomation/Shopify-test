@@ -1,0 +1,269 @@
+<style>
+  /* Main Container */
+.container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 400px;
+  justify-content: space-between;
+}
+
+/* Left Section (40%) */
+.left-section {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Image Styling */
+  .product-img {
+    display: flex;
+    justify-content: center;
+    background-color: #ebebeb;
+    padding: 50px 0;
+}
+.featured-img img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Right Section (60%) */
+.right-section {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Top Right Section */
+.top-right {
+  line-height: 1.4;
+}
+
+/* Bottom Right Section */
+.bottom-right {
+  flex-grow: 1;
+  position: relative;
+  padding-top: 20px;
+}
+
+  .top-right p {
+    margin: 6px 0;
+}
+
+/* Product Slider */
+.product-slider {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Product Item */
+.featured-product {
+  /* background-color: #ebebeb; */
+  margin: 0 1PX;
+  /* padding: 10px; */
+  text-align: left;
+}
+
+/* Product Image */
+.product-img img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Product Meta Info */
+.product-meta p {
+  font-size: 16px;
+  line-height: 0.7;
+  margin: 0;
+  margin-top: 15px;
+  color: black;
+}
+
+.product-meta span {
+  font-size: 14px;
+  color: black;
+}
+
+/* Slider Navigation Buttons */
+.slider-nav {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.slider-nav button {
+    background-color: transparent;
+    color: #000;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-transform: uppercase;
+}
+
+.slider-nav button:hover {
+  opacity: 0.5;
+}
+
+/* Responsive for Mobile */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .left-section,
+  .right-section {
+    width: 100%;
+  }
+
+  .slider-nav {
+    right: 5px;
+  }
+}
+</style>
+<section id="{{ section.id }}">
+  <div class="page-width">
+    <div class="container">
+      <div class="left-section">
+        {% if section.settings.img != blank %}
+        <div class="featured-img">
+          <img
+            src="{{ section.settings.img | img_url: 'master' }}"
+            alt="Featured Image"
+          />
+        </div>
+        {% endif %}
+      </div>
+      <div class="right-section">
+        <div class="top-right">
+          {{ section.settings.description }}
+        </div>
+        <div class="bottom-right">
+          <div class="product-slider">
+            {% for product in section.settings.collection.products %}
+            <div class="featured-product">
+              <div class="product-img">
+                <img
+                  src="{{ product.featured_image | img_url: '250x150' }}"
+                  alt="{{ product.title }}"
+                />
+              </div>
+              <div class="product-meta">
+                <p>{{ product.title }}</p>
+                <span>{{ product.price | money_with_currency }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="slider-nav">
+            <button class="prev-btn">&lt; prev</button> / <button class="next-btn">next &gt;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    var $slider = $('.product-slider');
+    var $prevBtn = $('.prev-btn');
+    var $nextBtn = $('.next-btn');
+
+  $(".product-slider").slick({
+    slidesToShow: 2,
+    slidesToScroll: 1,
+    infinite: false,
+    arrows: false,
+    dots: false,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  });
+
+  // Custom Prev Button
+  $(".prev-btn").click(function () {
+    $(".product-slider").slick("slickPrev");
+  });
+
+  // Custom Next Button
+  $(".next-btn").click(function () {
+    $(".product-slider").slick("slickNext");
+  });
+    
+  function updateButtonState() {
+    var currentSlide = $slider.slick('slickCurrentSlide');
+    var totalSlides = $slider.slick('getSlick').slideCount;
+    var slidesToShow = $slider.slick('slickGetOption', 'slidesToShow');
+
+    // Disable prev button on first slide
+    if (currentSlide === 0) {
+      $prevBtn.css('opacity', '0.5').prop('disabled', true);
+    } else {
+      $prevBtn.css('opacity', '1').prop('disabled', false);
+    }
+
+    // Disable next button on last slide
+    if (currentSlide >= totalSlides - slidesToShow) {
+      $nextBtn.css('opacity', '0.5').prop('disabled', true);
+    } else {
+      $nextBtn.css('opacity', '1').prop('disabled', false);
+    }
+  }
+
+  // Initial button state
+  updateButtonState();
+
+  // Update button state after slide change
+  $slider.on('afterChange', function () {
+    updateButtonState();
+  });
+});
+</script>
+{% schema %}
+  {
+    "name": "Trial",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "img",
+        "label": "Image"
+      },
+      {
+        "type": "richtext",
+        "id": "description",
+        "label": "Description"
+      },
+      {
+        "type": "collection",
+        "id": "collection",
+        "label": "Collection"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Trial"
+      }
+    ]
+  }
+{% endschema %}

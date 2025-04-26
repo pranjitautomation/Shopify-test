@@ -1,0 +1,109 @@
+<style>
+  .heading{
+    text-align: {{ section.settings.text_alignment }};
+    background-color: rgb(201, 76, 76);
+    border: 5px solid red;
+   }
+  #{{section.id}} .slideshow .jaaponmara{
+    border: 3px solid black;
+    width: 100%;
+  }
+</style>
+{% comment %}{% if section.settings.layout_option == 'full_width' %}
+  <div class="full-width-layout">
+    <h1> HI, tHis id full width.</h1>
+  </div>
+{% elsif section.settings.layout_option == 'grid' %}
+  <div class="grid-layout">
+    <h1> HI, tHis id Grid Layout</h1>
+  </div>
+{% endif %}
+{% endcomment %}
+<div id="{{ section.id }}">
+<div class="{{ section.settings.layout_option }} slideshow">
+  <h1 class="heading"> HI, tHis id Layout</h1>
+  {% for block in section.blocks  %}
+    <img class="jaaponmara" src="{{ block.settings.img_pick | img_url:'master' }}" width="auto" height="auto">
+  {% endfor %}
+</div>
+</div>
+
+
+{% comment %}{% case section.settings.slide_height %}
+  {% when 'small' %}
+    <div class="slide small-height">
+      <h1><!-- Small height slide code here --></h1>
+    </div>
+  {% when 'medium' %}
+    <div class="slide medium-height">
+      <h1><!-- Medium height slide code here --></h1>
+    </div>
+  {% when 'large' %}
+    <div class="slide large-height">
+      <h1><!-- Large height slide code here --></h1>
+    </div>
+{% endcase %}{% endcomment %}
+
+{% schema %}
+{
+  "name": "Slideshow testP",
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout_option",
+      "label": "Layout Option",
+      "default": "page-width",
+      "options": [
+        {
+          "value": "full_width",
+          "label": "Full Width"
+        },
+        {
+          "value": "page-width",
+          "label": "Page width"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Select text align",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "left"
+        },
+        {
+          "value": "center",
+          "label": "center"
+        },
+        {
+          "value": "right",
+          "label": "right"
+        }
+      ]
+    }
+  ],
+  "blocks":[
+    {
+      "type":"image",
+      "name":"image",
+      "settings":[
+        {
+          "type": "image_picker",
+          "id": "img_pick",
+          "label": "Image",
+        }
+      ]
+      
+    }
+  ],
+  "presets": [
+    {
+      "name": "Slideshow testP",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
